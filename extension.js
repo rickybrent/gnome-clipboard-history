@@ -253,6 +253,10 @@ class ClipboardIndicator extends PanelMenu.Button {
 
     Store.buildClipboardStateFromLog(
       (entries, favoriteEntries, nextId, nextDiskId) => {
+        if (this._to_destroy) {
+          console.log("lingering call to buildClipboardStateFromLog");
+          return;
+        }
         /**
          * This field stores the number of items in the historySection to avoid calling _getMenuItems
          * since that method is slow.
@@ -1207,6 +1211,7 @@ class ClipboardIndicator extends PanelMenu.Button {
     });
     this._bindShortcut(SETTING_KEY_TOGGLE_MENU, () => {
       // All shortcut, entries, and similar logic should be moved up to the extension level.
+      // Note: should have a fallback for invoking it whenever...
       let currentMonitorIdx = global.display.get_current_monitor();
       for (var i = 0; i < this.extension.clipboardIndicators.length; i++) {
         let clipboardIndicator = this.extension.clipboardIndicators[i];
@@ -1342,6 +1347,12 @@ class ClipboardIndicator extends PanelMenu.Button {
 
     return s;
   }
+
+  	
+	_destroy() {
+    this._to_destroy = true;
+		this.destroy();
+	}
 }
 
 const ClipboardIndicatorObj = GObject.registerClass(ClipboardIndicator);
@@ -1379,7 +1390,7 @@ export default class ClipboardHistoryExtension extends Extension {
   _removePanelChanges(){
     if (this.clipboardIndicators) {
       for (var i = 0; i < this.clipboardIndicators.length; i++) {
-        this.clipboardIndicators[i].destroy();
+        this.clipboardIndicators[i]._destroy();
       }
       this.clipboardIndicators = [];
     }
@@ -1389,7 +1400,7 @@ export default class ClipboardHistoryExtension extends Extension {
     let panels = this._getPanels();
     this._removePanelChanges();
 
-    for (var i = 0; i < panels.length; i++) {ClipboardIndicator
+    for (var i = 0; i < panels.length; i++) {
       let monitor = panels[i].monitor ? panels[i].monitor.index : 0;
       this.clipboardIndicators[i] = new ClipboardIndicatorObj(this, monitor);
       panels[i].panel.addToStatusArea(this.indicatorName, this.clipboardIndicators[i], 1);
