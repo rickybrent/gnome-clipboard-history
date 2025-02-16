@@ -1,10 +1,10 @@
 {
-  "name": "Clipboard History",
-  "version": 44,
-  "uuid": "clipboard-history@alexsaveau.dev",
-  "gettext-domain": "clipboard-history@alexsaveau.dev",
+  "name": "Clipboard History (Multipanel)",
+  "version": 45,
+  "uuid": "clipboard-history@dev.rickybrent.com",
+  "gettext-domain": "dev.rickybrent.com",
   "settings-schema": "org.gnome.shell.extensions.clipboard-history",
-  "description": "Gnome Clipboard History is a clipboard manager GNOME extension that saves items you've copied into an easily accessible, searchable history panel.",
-  "url": "https://github.com/SUPERCILEX/gnome-clipboard-history",
+  "description": "Gnome Clipboard History is a clipboard manager GNOME extension that saves items you've copied into an easily accessible, searchable history panel. This fork supports multiple panels.",
+  "url": "https://github.com/rickybrent/gnome-clipboard-history",
   "shell-version": ["46", "47"]
 }

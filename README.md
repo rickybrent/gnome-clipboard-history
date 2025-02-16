@@ -1,26 +1,26 @@
-# Gnome Clipboard History
+# This fork
+
+This is a quick fork of [Gnome Clipboard History](https://extensions.gnome.org/extension/4839/clipboard-history/) to support panels on multiple monitors via the [Dash to Panel](https://extensions.gnome.org/extension/1160/dash-to-panel/) extension.
+
+It works well enough for my own needs, but certain features may not work correctly with multiple monitors due to how it creates a new instance of an indicator for each panel.
+
+# Gnome Clipboard History (Upstream)
 
 [Gnome Clipboard History](https://extensions.gnome.org/extension/4839/clipboard-history/) is a
 clipboard manager GNOME extension that saves what you've copied into an easily accessible,
 searchable history panel.
 
-The extension is a rewrite of
+It is a rewrite of
 [Clipboard Indicator](https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator) with
 vastly improved performance, new features, and
 [bug fixes](https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator/pull/338).
 
 A technical overview is available at https://alexsaveau.dev/blog/gch.
 
-## Project status: replaced by Ringboard
+## Upstream Project status: replaced by Ringboard
 
 Gnome Clipboard History is now in maintenance mode as it is being replaced by
-[Ringboard](https://github.com/SUPERCILEX/clipboard-history). I'm still accepting PRs for small
-improvements and bug fixes (such as supporting the latest Gnome version), but no new development
-will take place.
-
-## Download
-
-[<img src="https://raw.githubusercontent.com/andyholmes/gnome-shell-extensions-badge/eb9af9a1c6f04eb060cb01de6aeb5c84232cd8c0/get-it-on-ego.svg?sanitize=true" alt="Get it on GNOME Extensions" height="100" align="middle">](https://extensions.gnome.org/extension/4839/clipboard-history/)
+[Ringboard](https://github.com/SUPERCILEX/clipboard-historyy).
 
 ## Tips
 
@@ -52,8 +52,8 @@ A note on versioning:
 
 ```shell
 cd ~/.local/share/gnome-shell/extensions/ && \
-  git clone https://github.com/SUPERCILEX/gnome-clipboard-history.git clipboard-history@alexsaveau.dev && \
-  cd clipboard-history@alexsaveau.dev && \
+  git clone https://github.com/rickybrent/gnome-clipboard-history.git clipboard-history@dev.rickybrent.com && \
+  cd clipboard-history@dev.rickybrent.com && \
   make
 ```
 
@@ -64,5 +64,5 @@ cd ~/.local/share/gnome-shell/extensions/ && \
 ### Install
 
 ```shell
-gnome-extensions enable clipboard-history@alexsaveau.dev
+gnome-extensions enable clipboard-history@dev.rickybrent.com
 ```
