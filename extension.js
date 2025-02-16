@@ -45,6 +45,9 @@ const INDICATOR_ICON = 'edit-paste-symbolic';
 const PAGE_SIZE = 50;
 const MAX_VISIBLE_CHARS = 200;
 
+// for dash-to-panel compatibility.
+const DASH_TO_PANEL_UUID = 'dash-to-panel@jderose9.github.com';
+
 let MAX_REGISTRY_LENGTH;
 let MAX_BYTES;
 let WINDOW_WIDTH_PERCENTAGE;
@@ -63,10 +66,11 @@ let PROCESS_PRIMARY_SELECTION;
 let IGNORE_PASSWORD_MIMES;
 
 class ClipboardIndicator extends PanelMenu.Button {
-  _init(extension) {
+  _init(extension, monitorIdx) {
     super._init(0, extension.indicatorName, false);
 
     this.extension = extension;
+    this.monitorIdx = monitorIdx;
     this.settings = extension.getSettings();
 
     this._shortcutsBindingIds = [];
@@ -1201,7 +1205,16 @@ class ClipboardIndicator extends PanelMenu.Button {
         this._nextEntry();
       }
     });
-    this._bindShortcut(SETTING_KEY_TOGGLE_MENU, () => this.menu.toggle());
+    this._bindShortcut(SETTING_KEY_TOGGLE_MENU, () => {
+      // All shortcut, entries, and similar logic should be moved up to the extension level.
+      let currentMonitorIdx = global.display.get_current_monitor();
+      for (var i = 0; i < this.extension.clipboardIndicators.length; i++) {
+        let clipboardIndicator = this.extension.clipboardIndicators[i];
+        if (clipboardIndicator.monitorIdx == currentMonitorIdx) {
+          clipboardIndicator.menu.toggle();
+        }
+      }
+    });
     this._bindShortcut(SETTING_KEY_PRIVATE_MODE, () =>
       this.privateModeMenuItem.toggle(),
     );
@@ -1334,18 +1347,76 @@ class ClipboardIndicator extends PanelMenu.Button {
 const ClipboardIndicatorObj = GObject.registerClass(ClipboardIndicator);
 
 export default class ClipboardHistoryExtension extends Extension {
+  _isExtensionActive(uuid) {
+    const extension = Main.extensionManager.lookup(uuid);
+    return (extension?.state === 1);
+  }
+
+  _connectExtensionSignals() {
+    const dtpActive = this._isExtensionActive(DASH_TO_PANEL_UUID);
+    if (dtpActive && global.dashToPanel)
+      global.dashToPanel._clipboardPanelsCreatedId = global.dashToPanel.connect('panels-created', () => this._reloadPanelChanges());
+  }
+
+  _disconnectExtensionSignals() {
+    if (global.dashToPanel?._clipboardPanelsCreatedId) {
+      global.dashToPanel.disconnect(global.dashToPanel._clipboardPanelsCreatedId);
+      delete global.dashToPanel._clipboardPanelsCreatedId;
+    }
+  }
+
+  _getPanels(){
+    const dtpActive = this._isExtensionActive(DASH_TO_PANEL_UUID);
+    let panels;
+    if (dtpActive && global.dashToPanel?.panels) {
+      panels = global.dashToPanel.panels.filter(p => p);
+    } else {
+      panels = [Main];
+    }
+    return panels;
+  }
+
+  _removePanelChanges(){
+    if (this.clipboardIndicators) {
+      for (var i = 0; i < this.clipboardIndicators.length; i++) {
+        this.clipboardIndicators[i].destroy();
+      }
+      this.clipboardIndicators = [];
+    }
+  }
+
+  _reloadPanelChanges(){
+    let panels = this._getPanels();
+    this._removePanelChanges();
+
+    for (var i = 0; i < panels.length; i++) {ClipboardIndicator
+      let monitor = panels[i].monitor ? panels[i].monitor.index : 0;
+      this.clipboardIndicators[i] = new ClipboardIndicatorObj(this, monitor);
+      panels[i].panel.addToStatusArea(this.indicatorName, this.clipboardIndicators[i], 1);
+    }
+  }
+
   enable() {
     this.indicatorName = `${this.metadata.name} Indicator`;
+    this.clipboardIndicators = [];
 
     Store.init(this.uuid);
 
-    this.clipboardIndicator = new ClipboardIndicatorObj(this);
-    Main.panel.addToStatusArea(this.indicatorName, this.clipboardIndicator, 1);
+    // for when dtp is enabled/disabled.
+    Main.extensionManager.connectObject('extension-state-changed', (data, extension) => {
+      if (extension.uuid === DASH_TO_PANEL_UUID) {
+        this._disconnectExtensionSignals();
+        this._connectExtensionSignals();
+        this._reloadPanelChanges();
+      }
+    }, this);
+    this._connectExtensionSignals();
+    this._reloadPanelChanges();
   }
 
   disable() {
-    this.clipboardIndicator.destroy();
-    this.clipboardIndicator = undefined;
+    this._disconnectExtensionSignals();
+    this._removePanelChanges();
 
     Store.destroy();
   }
